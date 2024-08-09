@@ -1,45 +1,45 @@
 package main
 
 import (
+	"crypto/rand"
 	"fmt"
+	"log"
 
-	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcutil/hdkeychain"
 )
 
 func main() {
-	// Master seed aleatório
-	masterSeed, err := hdkeychain.GenerateSeed(hdkeychain.RecommendedSeedLen)
+	// Generate a new seed
+	seed := make([]byte, 32)
+	_, err := rand.Read(seed)
 	if err != nil {
-		panic(err)
-	}
-	fmt.Println("Master seed:", masterSeed)
-
-	// Criando uma chave principal a partir da seed
-	// masterKey, err := hdkeychain.NewMaster(masterSeed, nil)
-	masterKey, err := hdkeychain.NewMaster(masterSeed, &chaincfg.TestNet3Params)
-	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 
-	// Derivando uma chave para a nossa carteira
-	childKey, err := masterKey.Child(0)
+	// Generate the master key from the seed
+	masterKey, err := hdkeychain.NewMaster(seed, btcsuite.MainNet)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 
-	fmt.Println("childKey:", childKey)
+	// Print the master private key
+	fmt.Println("Master Private Key:", masterKey.String())
 
-	// Obtendo o endereço público
-	// pubKey := childKey.PublicKey()
-	pubKey, err := childKey.ECPubKey()
-	// pubKey, err := childKey.ECPubKey()
-	// address, err := pubKey.Address()
+	// Derive the first child key (m/0'/0/0)
+	firstChild, err := masterKey.Child(0) // first child key
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 
-	// fmt.Println("Endereço público:", address)
-	fmt.Println("Endereço público2:", pubKey)
-	fmt.Println("Mnemônico:", masterSeed)
+	// Print first child private key
+	fmt.Println("First Child Private Key:", firstChild.String())
+
+	// You can derive further child keys using the Child method
+	secondChild, err := firstChild.Child(1) // derive second child key
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Print second child private key
+	fmt.Println("Second Child Private Key:", secondChild.String())
 }

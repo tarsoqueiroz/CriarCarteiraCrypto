@@ -1,8 +1,12 @@
 # Criar Carteira para Crypto
 
+## ***ATENÇÃO!!!***
+
+> ***Código na linguagem Go para a Carteira Hierárquica Determinística ainda em DESENVOLVIMENTO!!!***
+
 ## Sobre
 
-Simples rotina em Golang para criação de carteira para cryptomoedas com foco em Bitcoin.
+Simples rotina em Golang para criação de Carteiras Hierárquicas Determinísticas para cryptomoedas com foco em Bitcoin.
 
 Uma carteira de Bitcoin não é como uma carteira física, ela não armazena suas moedas. Em vez disso, ela armazena suas chaves privadas. Essas chaves são sequências aleatórias de caracteres que dão a você o controle sobre seus Bitcoins.
 

@@ -1,45 +1,88 @@
 package main
 
 import (
-	"crypto/rand"
 	"fmt"
-	"log"
+	"math/rand"
 
 	"github.com/btcsuite/btcutil/hdkeychain"
+	"github.com/tyler-smith/go-bip39"
 )
 
+func generateSeed(wordCount int) (string, error) {
+	entropy := make([]byte, wordCount*11/8)
+	if _, err := rand.Read(entropy); err != nil {
+		return "", err
+	}
+
+	mnemonic, err := bip39.NewMnemonic(entropy)
+	if err != nil {
+		return "", err
+	}
+
+	return mnemonic, nil
+}
+
+func createMasterKey(mnemonic string) (*hdkeychain.ExtendedKey, error) {
+	seed, err := bip39.NewSeedWithErrorChecking(mnemonic, "")
+	if err != nil {
+		return nil, err
+	}
+
+	master, err := hdkeychain.NewMaster(seed, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return master, nil
+}
+
+func deriveChildKey(parent *hdkeychain.ExtendedKey, index uint32) (*hdkeychain.ExtendedKey, error) {
+	child, err := parent.Child(index)
+	if err != nil {
+		return nil, err
+	}
+
+	return child, nil
+}
+
+func generateKeyPair(key *hdkeychain.ExtendedKey) (string, string, error) {
+	//	privateKey := key.PrivateKey.String()
+	privateKey := key.P
+	publicKey := key.PublicKey.String()
+
+	return privateKey, publicKey, nil
+}
+
 func main() {
-	// Generate a new seed
-	seed := make([]byte, 32)
-	_, err := rand.Read(seed)
+	// Gera uma seed inicial
+	seed, err := generateSeed(12)
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println(err)
+		return
+	}
+	fmt.Println("Seed:", seed)
+
+	// Cria a chave mestre
+	masterKey, err := createMasterKey(seed)
+	if err != nil {
+		fmt.Println(err)
+		return
 	}
 
-	// Generate the master key from the seed
-	masterKey, err := hdkeychain.NewMaster(seed, btcsuite.MainNet)
+	// Deriva uma nova chave mestre
+	childKey, err := deriveChildKey(masterKey, 1)
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println(err)
+		return
 	}
 
-	// Print the master private key
-	fmt.Println("Master Private Key:", masterKey.String())
-
-	// Derive the first child key (m/0'/0/0)
-	firstChild, err := masterKey.Child(0) // first child key
+	// Gera um par de chaves a partir da nova chave mestre
+	privateKey, publicKey, err := generateKeyPair(childKey)
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println(err)
+		return
 	}
 
-	// Print first child private key
-	fmt.Println("First Child Private Key:", firstChild.String())
-
-	// You can derive further child keys using the Child method
-	secondChild, err := firstChild.Child(1) // derive second child key
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// Print second child private key
-	fmt.Println("Second Child Private Key:", secondChild.String())
+	fmt.Println("Private key:", privateKey)
+	fmt.Println("Public key:", publicKey)
 }
